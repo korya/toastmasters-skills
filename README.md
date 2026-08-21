@@ -91,6 +91,44 @@ plugins/toastmasters/
     └── references/                  UI algorithms, site map
 ```
 
+## Developing this skill
+
+**Invoke it by its namespaced name: `/toastmasters:easy-speak`.** Plugin skills are always prefixed with
+the plugin name. Reaching for the bare `/easy-speak` fails and looks exactly like "the plugin isn't
+installed", which is the wrong diagnosis.
+
+**Installing takes a snapshot.** `/plugin install` copies the plugin into
+`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` and records the commit it came from. It is not
+a symlink: once installed, editing your working tree changes nothing about what Claude actually loads. And
+because `version` is pinned in `plugin.json`, a plugin update won't pull your edits either until you bump it.
+
+So while iterating, don't install — load from disk:
+
+```bash
+claude --plugin-dir ./plugins/toastmasters
+```
+
+A `--plugin-dir` plugin takes precedence over an installed one of the same name for that session, so this
+works even with `toastmasters@korya` installed. Use `/reload-plugins` to pick up edits without restarting.
+
+Reinstall only when you want to test the real install path:
+
+```bash
+claude plugin uninstall toastmasters
+claude plugin marketplace update korya
+claude plugin install toastmasters@korya
+```
+
+**A running session won't see a newly installed plugin.** Skills are listed at session start. After
+installing, restart before concluding anything about whether it triggers.
+
+**Validate before pushing:**
+
+```bash
+claude plugin validate .                      # marketplace
+claude plugin validate ./plugins/toastmasters # plugin
+```
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
