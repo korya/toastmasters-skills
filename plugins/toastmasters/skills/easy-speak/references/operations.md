@@ -160,23 +160,36 @@ As C1, clicking **`?`** instead. Verify `?` is selected.
 Use this when the user genuinely doesn't know yet — it is visibly different from never having responded, and
 tells the VPE you saw the request.
 
-### C4. Decline attendance — `unverified — contract not captured`
+### C4. Decline attendance — `verified` (for a member holding no roles)
 
-**This path is not symmetric with the others.** Clicking `N` does not submit the form; it opens a **popup window**
-(`/tm_decline.php`, 400×300) which presumably asks for a reason and a confirmation.
+**This path is not symmetric with the others.** Clicking `N` does not submit the attendance form at all. It
+opens a 400×300 popup window (`/tm_decline.php`) and leaves the board untouched until that popup is
+submitted.
 
-Provisional algorithm:
+The popup is a single optional reason `textarea` named `comment[<memberMeetingId>]` — note that is a
+*member-meeting* id, a third id type distinct from the meetingId and the role slot id — plus confirm and
+cancel submit buttons. It POSTs back to itself.
 
-1. Navigate to `/signup.php`.
-2. Resolve the target meeting to its column.
-3. Click the **`N`** radio.
-4. A popup window opens. Switch to it, read its form, complete whatever it asks (likely a reason), submit.
-5. Close the popup, return to `/signup.php`, reload.
-6. **Verify:** `N` is selected for that column.
+1. Read the board and resolve the target meeting to its column.
+2. Click the **`N`** control for that column.
+3. A popup window opens. Switch to it.
+4. Optionally fill the reason. **A blank reason submits cleanly** — the field is not required. Only fill it
+   if the user gave you a reason to pass on; don't invent one on their behalf.
+5. **Click the popup's own confirm button.** The popup closes itself when its button is used. Submitting the
+   form out-of-band works too, but leaves an orphaned 400×300 window sitting on the user's screen that they
+   have to close by hand — and a stray window whose OK button would re-submit is a trap worth not setting.
+6. Return to the board and reload it.
+7. **Verify:** status for that meeting reads `notAttending`.
 
-**Open questions to resolve on first real use:** is the reason mandatory? Does it notify the VPE? Does it
-also release any roles the member holds at that meeting? Until answered, always walk the user through this one
-rather than automating it.
+Observed end-to-end on 2026-08-21: status went `none` → `notAttending` with a blank reason, confirmed on a
+fresh page load rather than inferred from the response.
+
+**Still unknown, so don't assume either way:**
+
+- Whether declining notifies the VP Education.
+- **Whether declining releases roles the member already holds at that meeting.** The one member who has
+  exercised this held no roles that night, so the interesting path is untested. If a user with a role asks
+  to decline, say this is unverified and check the board afterwards to see whether their role survived.
 
 ### C5. Set attendance across the next N meetings — `partial`
 
@@ -228,8 +241,8 @@ Contract not captured.
 
 | Priority | Operations |
 |---|---|
-| **MVP** | A1, A2, B1, B2, B3, B4, C1, C2, C3, D1 |
-| **Next** | C4 (decline), C5 (bulk), D2 (release) |
+| **MVP** | A1, A2, B1, B2, B3, B4, C1, C2, C3, C4, D1 |
+| **Next** | C5 (bulk), D2 (release) |
 | **Later** | A3, B5, B6, D3 |
 
 ## Cross-cutting rules for the skill

@@ -107,13 +107,16 @@ For the click-by-click algorithm behind each operation, read `references/operati
 | | Club roster / officers | `/memberlist.php` — see site-map |
 | | Meetings further out | `/mycalendar.php?jump=<months ahead>` |
 | **Write** | Confirm attendance (in person / online / undecided) | Click the matching `controls` mark |
-| | Decline attendance | Opens a popup — **contract unmapped**, walk the user through it |
+| | Decline attendance | Click `N`, then confirm in the popup that opens; reason is optional |
 | | Claim a role | Click an `openSlots` mark; also sets your attendance |
 | | Release a role | **Unmapped** — hand to the user |
 | | Request a speech slot | **Unmapped** — hand to the user |
 
-Three operations are honestly unmapped because verifying them required writing to a live club board. When
-one comes up, say so and drive the user through the UI rather than guessing at a control you've never seen.
+Two operations are still unmapped, because verifying them required writing to a live club board. When one
+comes up, say so and drive the user through the UI rather than guessing at a control you've never seen.
+
+Declining is now mapped, with one caveat: nobody has yet declined *while holding a role*, so whether that
+releases the role is unknown. If that's the situation, say so and check the board afterwards.
 
 ## Things that will bite you
 
@@ -139,8 +142,9 @@ aren't — mention this when a user claims a role after saying they might not ma
 **Role slot ids are per-meeting.** `roleItemId` identifies an agenda line, not a role type — "Toastmaster"
 has a different id at every meeting. Never carry one across meetings; always re-read the board.
 
-**Declining is not symmetric with accepting.** `P`/`O`/`?` submit the form; `N` opens a popup window that
-wants more input. Don't assume the fourth radio behaves like the other three.
+**Declining is not symmetric with accepting.** `P`/`O`/`?` submit the form; `N` opens a popup and leaves the
+board untouched until that popup is confirmed. Use the popup's own button rather than submitting around it,
+or you strand a window on the user's screen whose OK button would re-submit.
 
 **Keep query strings out of tool output.** The Chrome extension blocks tool results that look like
 cookie or query-string data, so a script that dumps raw hrefs returns `[BLOCKED]` and costs a round trip.

@@ -70,10 +70,13 @@ The same software runs at three addresses; the skill works with all of them:
 
 ## Status
 
-Early. Reading the signup board, checking attendance and roles, and setting attendance are mapped and
-tested against a live club. Declining a meeting, releasing a role, and requesting a speech slot are
-documented as **unmapped** — verifying them requires writing to a real club's board, so the skill hands
-those to you rather than guessing at controls nobody has observed.
+Early, but the core works against a live club. Reading the signup board, checking attendance and roles,
+setting attendance, and declining a meeting are mapped and exercised for real.
+
+Releasing a role and requesting a speech slot are still documented as **unmapped** — verifying them means
+writing to a real club's board, so the skill hands those to you rather than guessing at controls nobody has
+observed. Declining is mapped with one gap: nobody has yet declined while holding a role, so whether that
+releases the role is unknown.
 
 The reference material the skill was reverse-engineered from ships with it, in
 `plugins/toastmasters/skills/easy-speak/references/`.

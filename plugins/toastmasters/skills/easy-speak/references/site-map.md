@@ -73,11 +73,21 @@ which sets the form action and submits:
 
 ### Set attendance — declining (code 2)
 
-Asymmetric: opens a **popup** instead of submitting.
+Asymmetric: opens a **popup** instead of submitting the board's form. The board is unchanged until the popup
+is submitted.
 
     /tm_decline.php?action=confirmattendance&u=<userId>&t=<meetingId>&z=2&mode=popup
 
-Presumably collects a reason / confirmation. **Contract not yet captured — TODO.**
+Window is 400x300. Contents: one optional `textarea` named `comment[<memberMeetingId>]`, plus confirm and
+cancel submits, POSTing back to the same page. A blank reason is accepted.
+
+`memberMeetingId` is a **third id type**, distinct from `t` (meeting) and `r` (role slot). Read it from the
+popup; don't try to derive it.
+
+Confirmed working 2026-08-21: `none` -> `notAttending`, blank reason, verified on a fresh board load.
+
+Two behaviours remain unobserved: whether it notifies the VP Education, and whether it releases roles the
+member holds at that meeting (the member who exercised it held none).
 
 ### Claim a role
 
@@ -162,7 +172,8 @@ for someone's contact details; a roster question doesn't need the club's persona
 
 ## Still to capture
 
-- [ ] `tm_decline.php` popup form contract (declining)
+- [ ] Whether declining notifies the VPE, and whether it releases roles the member holds
+
 - [ ] Releasing / un-claiming a role
 - [ ] What a successful write returns (redirect? flash message?) — needed for verification after a write
 - [ ] Behaviour when >1 future meeting exists (multi-column layout, `available[1]`, `available[2]`…)
