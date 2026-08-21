@@ -8,6 +8,23 @@ description: Manage Toastmasters club participation on easy-Speak (easy-speak.or
 easy-Speak is the meeting-management system many Toastmasters clubs run on. It is a phpBB-era PHP
 application with no API, so this skill works by driving the real web UI in Chrome.
 
+## Requirements — read this before promising anything
+
+This skill has hands only if the agent running it can drive a browser. easy-Speak has no API, no
+authenticated feed, and sits behind Cloudflare, so there is no way to do the work over plain HTTP.
+
+- **Claude Code with the Chrome extension** — the intended setup. Navigate, read the page, and run the
+  bundled scripts through the browser JavaScript tool.
+- **Any agent with a browser MCP server** (Playwright or similar) — works. `references/operations.md` is
+  written as what a human does in the browser precisely so it survives the swap; only the tool names change.
+- **Codex or ChatGPT with no browser tooling configured** — the skill will load and read correctly, and then
+  be unable to act. If that's the situation, say so plainly up front rather than working through the
+  algorithm and discovering it at the click. Offer the user the read-only alternative: walk them through the
+  steps to run themselves.
+
+Check what you actually have before telling the user what you'll do. An agent that announces "I'll confirm
+your attendance" and then cannot click is worse than one that says "I can't reach the site from here."
+
 ## The one idea that makes this simple
 
 Almost everything lives on **one page**: `/signup.php`, the *Sign Up for Meetings* board. It is a single

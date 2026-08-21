@@ -1,0 +1,96 @@
+# toastmasters-skills
+
+A Claude Code / Codex plugin marketplace for managing [Toastmasters](https://www.toastmasters.org/) club
+participation on [easy-Speak](https://easy-speak.org/).
+
+## What's here
+
+| Plugin | What it does |
+| --- | --- |
+| **toastmasters** | Check and set meeting attendance, claim roles, and see when you're next speaking on easy-Speak. |
+
+easy-Speak has no API, so the plugin works by driving the site's real web UI in a browser.
+
+## Install
+
+### Claude Code
+
+```
+/plugin marketplace add korya/toastmasters-skills
+/plugin install toastmasters@korya
+```
+
+To try it without installing:
+
+```bash
+claude --plugin-dir ./plugins/toastmasters
+```
+
+### Codex
+
+Codex discovers skills under `.agents/skills/`. Clone the repo and point Codex at it:
+
+```bash
+git clone https://github.com/korya/toastmasters-skills
+ln -s "$PWD/toastmasters-skills/plugins/toastmasters/skills/easy-speak" ~/.agents/skills/easy-speak
+```
+
+Running Codex from inside the cloned repo also works — `.agents/skills/` is symlinked to the plugin's
+skills directory for that purpose.
+
+> **Codex needs browser automation.** Unlike Claude Code, Codex ships no browser control. Without a browser
+> MCP server (Playwright or similar) configured, the skill will load and read correctly but cannot click
+> anything. See the skill's *Requirements* section — it's written to tell you this up front rather than
+> failing halfway through.
+
+## Usage
+
+Once installed, just ask:
+
+- *"Am I signed up for the next meeting?"*
+- *"What roles are still open next week?"*
+- *"When am I speaking next?"*
+- *"Confirm me for the next three meetings, attending online."*
+- *"Sign me up as Timer for the 24th."*
+
+You log in yourself the first time — the skill never handles your password.
+
+Writes are confirmed with you before they happen and verified afterwards, because easy-Speak commits role
+signups instantly with no undo prompt and the whole club sees the result.
+
+## Supported hosts
+
+The same software runs at three addresses; the skill works with all of them:
+
+| Host | Clubs |
+| --- | --- |
+| `easy-speak.org` | Everywhere else |
+| `toastmasterclub.org` | UK / Ireland |
+| `tmclub.eu` | Mainland Europe |
+
+## Status
+
+Early. Reading the signup board, checking attendance and roles, and setting attendance are mapped and
+tested against a live club. Declining a meeting, releasing a role, and requesting a speech slot are
+documented as **unmapped** — verifying them requires writing to a real club's board, so the skill hands
+those to you rather than guessing at controls nobody has observed.
+
+The reference material the skill was reverse-engineered from ships with it, in
+`plugins/toastmasters/skills/easy-speak/references/`.
+
+## Repository layout
+
+```
+.claude-plugin/marketplace.json      the marketplace catalogue
+plugins/toastmasters/
+├── .claude-plugin/plugin.json       Claude Code manifest
+├── .codex-plugin/plugin.json        Codex manifest
+└── skills/easy-speak/
+    ├── SKILL.md
+    ├── scripts/                     browser-injected helpers
+    └── references/                  UI algorithms, site map
+```
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
