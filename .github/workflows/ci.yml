@@ -15,7 +15,7 @@ jobs:
       # plus Claude Code and Codex enforcement. Strict: silent degradation (e.g. a
       # SKILL.md over Codex's 8000-byte activation cap) fails the job. Pedantic-tier
       # exceptions live in askl.config.json.
-      - uses: korya/askl@v0
+      - uses: korya/askl@v1
         with:
           dialect: spec,claude,codex
           strict: "true"
