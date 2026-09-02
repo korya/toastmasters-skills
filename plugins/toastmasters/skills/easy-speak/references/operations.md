@@ -4,6 +4,8 @@ How to perform each supported operation by driving the web UI. This file is deli
 **what a human does in the browser**, not in terms of any particular automation tool — so it stays valid when
 this skill is ported to another agent. `../SKILL.md` maps these steps onto Claude's Chrome tools.
 
+> Names and ids in the examples below are **invented placeholders**, not real people or real meetings.
+
 **Status legend** — `verified` observed working in a live session · `partial` structure seen, outcome not
 observed · `unverified` inferred, never exercised.
 

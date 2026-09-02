@@ -3,9 +3,9 @@
 Reference for the pages, codes and URL contracts behind the operations in `operations.md`.
 Captured 2026-08-17 from a live browser session against a real club.
 
-> The identity block below is the account this was captured from. It is provenance — evidence for how the
-> contracts were derived — not configuration. Every id here is club- and meeting-specific; re-read them from
-> the live page rather than reusing these values.
+> All names, ids and club details in this file are **invented placeholders**, not real data. They exist to
+> show the shape of what you'll read off a page. Every id is club- and meeting-specific anyway, so these
+> values would be useless even if they were real — always read them from the live page.
 
 Software version: **Toastmaster Automation v2.37** (phpBB-derived).
 
@@ -27,11 +27,13 @@ Same software, three deployments — the skill must be host-parameterised:
 - phpBB-style `sid=` token appended to most in-app URLs. Session also lives in cookies.
 - Login is a plain form in the left sidebar of `portal.php`. Must be done by the human (agent may not type passwords).
 
-## Provenance (the account this was captured from)
+## Example account shape
+
+Placeholder values, shown so the field names below have something concrete to point at:
 
 - user: `example_user` — Sam Example — **userId `100001`**
 - club: Example Toastmasters Club (`EX Club`), club #1234567, Area 1 / Division A / District 99
-- meets Mondays 12:00pm, hybrid (in-person + online)
+- meets weekly at midday, hybrid (in-person + online)
 
 ## Page map
 
