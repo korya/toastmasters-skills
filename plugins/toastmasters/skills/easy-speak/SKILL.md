@@ -10,22 +10,20 @@ description: Manage Toastmasters club participation on easy-Speak (easy-speak.or
 easy-Speak is the meeting-management system many Toastmasters clubs run on. It is a phpBB-era PHP
 application with no API, so this skill works by driving the real web UI in Chrome.
 
-## Requirements — read this before promising anything
+## First, work out which hands you have
 
-This skill has hands only if the agent running it can drive a browser. easy-Speak has no API, no
-authenticated feed, and sits behind Cloudflare, so there is no way to do the work over plain HTTP.
+easy-Speak has no API and sits behind Cloudflare, so the only way to do anything is to drive the page. What
+you can do depends on how you reach it — check before promising anything. Announcing "I'll confirm your
+attendance" and discovering at the click that you can't is the failure worth designing out.
 
-- **Claude Code with the Chrome extension** — the intended setup. Navigate, read the page, and run the
-  bundled scripts through the browser JavaScript tool.
-- **Any agent with a browser MCP server** (Playwright or similar) — works. `references/operations.md` is
-  written as what a human does in the browser precisely so it survives the swap; only the tool names change.
-- **Codex or ChatGPT with no browser tooling configured** — the skill will load and read correctly, and then
-  be unable to act. If that's the situation, say so plainly up front rather than working through the
-  algorithm and discovering it at the click. Offer the user the read-only alternative: walk them through the
-  steps to run themselves.
+| What you have | How to work |
+|---|---|
+| A JavaScript tool in the page (Claude Code + Chrome extension, or a browser MCP server) | **Scripted path** — the rest of this file. Reads the board in one call, clicks by tag. Fast and safe. |
+| Only screenshots and clicks (ChatGPT's cloud browser) | **Visual path** — follow `references/visual-operation.md`. The bundled scripts will not run there. |
+| No browser at all | Say so plainly, and offer to talk the member through the steps themselves. |
 
-Check what you actually have before telling the user what you'll do. An agent that announces "I'll confirm
-your attendance" and then cannot click is worse than one that says "I can't reach the site from here."
+Both paths perform the same operations from `references/operations.md`; they differ only in how they read
+the page and how they click.
 
 ## The one idea that makes this simple
 
@@ -42,16 +40,13 @@ the site.
 
 ## Getting a session
 
-1. Pick the host. Clubs are split across three installs of the same software: `toastmasterclub.org`
-   (UK/Ireland), `tmclub.eu` (mainland Europe), `easy-speak.org` (everywhere else). If the user hasn't said,
-   ask once and remember it.
-2. Open `https://<host>/signup.php`. **Cloudflare serves a `Just a moment...` interstitial on the first
-   hit** — wait about 5 seconds and let the tab title change before reading anything. A page read taken too
-   early returns the challenge page, not the site.
-3. Confirm you're logged in (`session.loggedIn` in the board output below).
-4. If logged out: **hand the tab to the user and ask them to log in.** The login form is in the left sidebar
-   of `portal.php`. Never type the password — that is theirs to enter, and there is no automation win worth
-   holding someone's credentials.
+1. Pick the host: `toastmasterclub.org` (UK/Ireland), `tmclub.eu` (mainland Europe), `easy-speak.org`
+   (everywhere else). Same software, three installs. Ask once if unsaid, then remember it.
+2. Open `https://<host>/signup.php` and **wait ~5s** — Cloudflare shows a `Just a moment...` page first, and
+   a read taken too early returns the challenge, not the site.
+3. Confirm you're logged in (`session.loggedIn` below).
+4. If not, **hand the tab over and ask them to log in** — the form is in `portal.php`'s left sidebar. Never
+   type the password. It's theirs, and no automation win is worth holding someone's credentials.
 
 Sessions expire between conversations — check `session.loggedIn` every time (`references/gotchas.md` explains the failure mode).
 
@@ -120,11 +115,16 @@ If a write didn't visibly take effect, say that instead of assuming success.
 When reading the roster, take names and club roles and leave the phone and email columns alone — a headcount
 doesn't need the club's contact details pulled into a transcript.
 
+**Match the member's vocabulary, not the site's.** These are club members, not engineers. "You're down as
+coming on Monday the 24th" lands; `status: inPerson` does not. Keep ids, selectors and JSON out of it unless
+asked, and ask one plain question at a time.
+
 ## Files
 
 - `scripts/read_board.js` — parse the signup board into JSON and tag clickable elements
 - `scripts/summarize_board.js` — one-screen view of the board; use this to verify a write
 - `scripts/click_mark.js` — click a tagged element (substitute `__MARK__`)
+- `references/visual-operation.md` — how to work with screenshots and clicks only, when the scripts can't run
 - `references/operations.md` — step-by-step algorithm for each operation, including the unmapped ones
 - `references/gotchas.md` — write mechanics and the traps; read before the first write
 - `references/site-map.md` — page map, attendance codes, URL contracts, provenance
