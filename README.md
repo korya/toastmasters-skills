@@ -125,19 +125,35 @@ plugins/toastmasters/
 the plugin name. Reaching for the bare `/easy-speak` fails and looks exactly like "the plugin isn't
 installed", which is the wrong diagnosis.
 
-**Installing takes a snapshot.** `/plugin install` copies the plugin into
-`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` and records the commit it came from. It is not
-a symlink: once installed, editing your working tree changes nothing about what Claude actually loads. And
-because `version` is pinned in `plugin.json`, a plugin update won't pull your edits either until you bump it.
+**Installing takes a snapshot — in both clients.** Install copies the plugin into a cache and pins it:
 
-So while iterating, don't install — load from disk:
+| Client | Cache |
+| --- | --- |
+| Claude Code | `~/.claude/plugins/cache/korya/toastmasters/<version>/` |
+| Codex | `~/.codex/plugins/cache/korya/toastmasters/<version>/` |
+
+Neither is a symlink (verified by editing a bundled script and watching the cache not follow). So once
+installed, editing your working tree changes nothing about what the agent loads. Worse, `version` is pinned
+in the manifests, so an update won't pull your edits either until you bump it.
+
+While iterating, don't install — load from disk.
+
+**Claude Code** takes a plugin directory directly, and it wins over an installed plugin of the same name for
+that session:
 
 ```bash
 claude --plugin-dir ./plugins/toastmasters
 ```
 
-A `--plugin-dir` plugin takes precedence over an installed one of the same name for that session, so this
-works even with `toastmasters@korya` installed. Use `/reload-plugins` to pick up edits without restarting.
+Use `/reload-plugins` to pick up edits without restarting.
+
+**Codex** has no equivalent flag, but it discovers skills under `.agents/skills/`, which this repo symlinks
+to the plugin's skills directory. So running Codex from inside a clone reads your working tree live — that
+is the Codex dev loop:
+
+```bash
+cd toastmasters-skills && codex
+```
 
 Reinstall only when you want to test the real install path:
 
@@ -145,16 +161,24 @@ Reinstall only when you want to test the real install path:
 claude plugin uninstall toastmasters
 claude plugin marketplace update korya
 claude plugin install toastmasters@korya
+
+codex plugin remove toastmasters@korya
+codex plugin add toastmasters@korya
 ```
 
 **A running session won't see a newly installed plugin.** Skills are listed at session start. After
-installing, restart before concluding anything about whether it triggers.
+installing, restart before concluding anything about whether it triggers — this has misled two agents
+already.
 
-**Validate before pushing:**
+**Check before pushing.** Claude Code ships a validator; for Codex, adding the marketplace and listing it is
+a serviceable smoke test that the catalogue parses and the plugin resolves:
 
 ```bash
 claude plugin validate .                      # marketplace
 claude plugin validate ./plugins/toastmasters # plugin
+
+codex plugin marketplace add .
+codex plugin list --marketplace korya
 ```
 
 ## Licence
