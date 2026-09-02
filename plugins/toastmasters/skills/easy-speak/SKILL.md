@@ -1,5 +1,7 @@
 ---
 name: easy-speak
+license: MIT
+compatibility: Requires browser automation the agent can drive (Claude Code with the Chrome extension, or any agent with a browser MCP server such as Playwright). Needs an easy-Speak account; the user logs in themselves.
 description: Manage Toastmasters club participation on easy-Speak (easy-speak.org, toastmasterclub.org, tmclub.eu) by driving the site's web UI in Chrome — check or set meeting attendance, claim roles, see when you're next speaking, and read the agenda, roster or club calendar. Use this whenever the user mentions easy-Speak, Toastmasters, their club meetings, meeting roles (Toastmaster, Table Topics Master, Evaluator, Grammarian, Timer, Quizmaster, Ah-Counter), or asks things like "am I speaking soon", "what roles are open next week", "confirm me for the next three meetings", "sign me up as Timer", or "who's on the agenda" — even when they never name the website.
 ---
 
