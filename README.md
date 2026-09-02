@@ -28,15 +28,19 @@ claude --plugin-dir ./plugins/toastmasters
 
 ### Codex
 
-Codex discovers skills under `.agents/skills/`. Clone the repo and point Codex at it:
+Codex reads the same marketplace file — it accepts `.claude-plugin/marketplace.json` for compatibility, so
+one catalogue serves both clients:
 
 ```bash
-git clone https://github.com/korya/toastmasters-skills
-ln -s "$PWD/toastmasters-skills/plugins/toastmasters/skills/easy-speak" ~/.agents/skills/easy-speak
+codex plugin marketplace add korya/toastmasters-skills
+codex plugin add toastmasters@korya
 ```
 
-Running Codex from inside the cloned repo also works — `.agents/skills/` is symlinked to the plugin's
-skills directory for that purpose.
+Verified end to end: the marketplace resolves, and the plugin installs and enables at
+`~/.codex/plugins/cache/korya/toastmasters/`.
+
+Without the plugin system, Codex also discovers skills under `.agents/skills/` — this repo symlinks that to
+the plugin's skills directory, so running Codex from inside a clone picks the skill up directly.
 
 > **Codex needs browser automation.** Unlike Claude Code, Codex ships no browser control. Without a browser
 > MCP server (Playwright or similar) configured, the skill will load and read correctly but cannot click
@@ -91,6 +95,11 @@ matters — a skill is a folder with a `SKILL.md`.
 | [Agent Skills](https://agentskills.io) | `SKILL.md` frontmatter, naming, layout | `skills/easy-speak/` |
 | [Agent Plugins](https://agent-plugins.org) | vendor-neutral plugin packaging | `plugins/toastmasters/plugin.json` |
 | [Claude Code plugins](https://code.claude.com/docs/en/plugins) | marketplace and install | `.claude-plugin/` |
+
+There is **one** marketplace file, not two. Codex's native location is `.agents/plugins/marketplace.json`,
+but it also reads `.claude-plugin/marketplace.json`, and both `claude plugin marketplace add` and
+`codex plugin marketplace add` resolve this repo from that single file. A second catalogue listing the same
+versions would only be somewhere for the two to disagree.
 
 The Agent Plugins manifest is the portable one; `.claude-plugin/` and `.codex-plugin/` are vendor shells
 around the same skill. Agent Plugins reserves `mcp.json` at the plugin root for bundling MCP servers — the
