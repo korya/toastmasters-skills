@@ -81,16 +81,32 @@ releases the role is unknown.
 The reference material the skill was reverse-engineered from ships with it, in
 `plugins/toastmasters/skills/easy-speak/references/`.
 
+## Standards
+
+This repo targets three open specs at once, which costs almost nothing because they agree on the part that
+matters — a skill is a folder with a `SKILL.md`.
+
+| Spec | What it governs | Where |
+| --- | --- | --- |
+| [Agent Skills](https://agentskills.io) | `SKILL.md` frontmatter, naming, layout | `skills/easy-speak/` |
+| [Agent Plugins](https://agent-plugins.org) | vendor-neutral plugin packaging | `plugins/toastmasters/plugin.json` |
+| [Claude Code plugins](https://code.claude.com/docs/en/plugins) | marketplace and install | `.claude-plugin/` |
+
+The Agent Plugins manifest is the portable one; `.claude-plugin/` and `.codex-plugin/` are vendor shells
+around the same skill. Agent Plugins reserves `mcp.json` at the plugin root for bundling MCP servers — the
+natural place to close the Codex browser gap, if that's ever worth doing.
+
 ## Repository layout
 
 ```
 .claude-plugin/marketplace.json      the marketplace catalogue
 plugins/toastmasters/
+├── plugin.json                      Agent Plugins manifest (portable)
 ├── .claude-plugin/plugin.json       Claude Code manifest
 ├── .codex-plugin/plugin.json        Codex manifest
 └── skills/easy-speak/
-    ├── SKILL.md
-    ├── scripts/                     browser-injected helpers
+    ├── SKILL.md                     Agent Skills compliant
+    ├── scripts/                     read_board, summarize_board, click_mark
     └── references/                  UI algorithms, site map
 ```
 
