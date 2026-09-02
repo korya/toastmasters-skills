@@ -42,6 +42,10 @@ are scheduled and pass.
 | 🏠 `icon_yesP_up.png` | Claim this slot, attending **in person** |
 | 💻 `icon_yesV_up.png` | Claim this slot, attending **online** |
 
+**Both icons are not always present.** A club that doesn't meet online renders only the in-person icon, and
+its attendance row offers only three radios (`P`, `N`, `?`) instead of four. Observed on meeting 700002.
+Read which controls exist; never assume the online pair is there.
+
 **⚠️ Clicking a slot icon commits immediately.** It is a side-effecting GET with no confirmation dialog. There is
 no "are you sure". Treat every icon click as irreversible-until-manually-undone, and confirm with the user first.
 
@@ -76,6 +80,10 @@ single-club case; capture the flow the first time it matters.
 ## B. Read operations
 
 ### B1. List upcoming meetings open for signup — `verified`
+
+**The board may be empty.** With nothing scheduled, `/signup.php` renders "There is no data to report in
+this category for your club" and no table at all — a different shape from a board with zero columns. The
+scripts return `empty: true`. Report it as "the club has nothing scheduled", not as a failure to read.
 
 1. Navigate to `/signup.php`.
 2. Read the header row. Each cell after the first is one upcoming meeting: label (e.g. `24 Aug 26`) plus a link
@@ -141,7 +149,7 @@ the user asks "what's happening at the meeting" rather than "what's open".
 > Every algorithm in this section changes what the club sees. **Confirm the specific meeting and the specific
 > value with the user before clicking**, and report the verified end state afterwards.
 
-### C1. Confirm attendance — in person — `partial`
+### C1. Confirm attendance — in person — `verified`
 
 1. Navigate to `/signup.php`.
 2. Resolve the target meeting to its column.
@@ -206,7 +214,7 @@ Composite, not a distinct UI feature:
 
 ## D. Role writes
 
-### D1. Claim an open role — `partial`
+### D1. Claim an open role — `verified`
 
 1. Navigate to `/signup.php`.
 2. Resolve the target meeting to its column, and locate the role row.
@@ -219,15 +227,26 @@ Composite, not a distinct UI feature:
 **Side effect worth stating out loud:** claiming a role also declares *how* you attend (the `att` value). Claiming
 in person will set your attendance accordingly — so C-series and D-series operations are coupled, not independent.
 
+**Precedence, observed 2026-08-27:** claiming a role when attendance is *already set* does not clobber the
+existing value. The coupling only fills a blank; it does not overwrite a deliberate choice.
+
 If multiple slots are open in a role, the icons belong to a specific slot number. Pick deliberately; don't assume
 the first pair of icons is slot 1.
 
 ### D2. Release a role I hold — `unverified — contract not captured`
 
-Not observable in the captured session (the account held no roles). Expect a "remove me" / ✗ icon on cells the
-user occupies. To capture: claim a role via D1, then screenshot that cell and record the control it exposes.
+Not yet observed. Expect a "remove me" / ✗ control on cells the user occupies.
 
-Until captured, do this manually and treat it as user-driven.
+**Capture it read-only, not by releasing.** `read_board.js` reports a `myControls` array for any cell the
+logged-in user occupies — the release affordance's mark, title and icon — without clicking it. That is enough
+to promote this to `partial` and costs nothing.
+
+Do not stage a release-and-reclaim to capture the outcome. The member's name leaves the club's board while it
+happens and the re-claim can lose a race with another member. Wait for a real release instead; it costs
+nothing to be patient about a documentation gap.
+
+An attempt to capture this on 2026-09-01 found no upcoming meetings at all, so no occupied cell existed to
+read. The window is whenever the user actually holds a role.
 
 ### D3. Request a speech slot — `unverified`
 

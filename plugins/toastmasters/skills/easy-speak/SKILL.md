@@ -75,6 +75,12 @@ that bite hand-rolled parsers (see *Things that will bite you*).
 
 `status` is one of `inPerson`, `online`, `notAttending`, `undecided`, or `none`.
 
+`options` lists only the choices this board actually renders — read it rather than assuming. Clubs that
+don't meet online have no `online` option and no online icon on their open slots, and telling such a member
+"I'll sign you up online" promises something the board cannot do.
+
+To **verify** a write, run `scripts/summarize_board.js` instead — same facts, one screen, cheap to re-run.
+
 ## Changing things
 
 The rhythm for every write is **read → confirm → click → re-read → report what you actually saw.**
@@ -90,8 +96,13 @@ exactly as they would for a human. Coordinate clicks on a table of identical ico
 up as Grammarian when they asked for Timer.
 
 **Re-read the board afterwards.** The page reloads on every write, which destroys the marks and can reorder
-columns. Re-running the script is both how you re-tag and how you verify. Report the state you observed, not
-the state you intended — if a write silently didn't take, saying "done" is worse than saying nothing.
+columns. Re-running is both how you re-tag and how you verify. Report the state you observed, not the state
+you intended — if a write silently didn't take, saying "done" is worse than saying nothing.
+
+**Don't sleep a fixed number of seconds waiting for the reload.** `summarize_board.js` reports
+`document.readyState` on its first line; if that says `loading`, or the value still reads the old one, run it
+again. A sleep guessed too short reports "the write didn't take" when it did — a false negative on the exact
+claim this skill exists to make honestly.
 
 For the click-by-click algorithm behind each operation, read `references/operations.md`.
 
@@ -146,6 +157,11 @@ has a different id at every meeting. Never carry one across meetings; always re-
 board untouched until that popup is confirmed. Use the popup's own button rather than submitting around it,
 or you strand a window on the user's screen whose OK button would re-submit.
 
+**An empty board is not an error.** When the club has nothing scheduled, `/signup.php` renders "There is no
+data to report in this category for your club" with no table at all. The scripts return `empty: true` for
+this. It means the VP Education hasn't scheduled, not that anything is broken — say so plainly rather than
+reporting a parse failure.
+
 **Keep query strings out of tool output.** The Chrome extension blocks tool results that look like
 cookie or query-string data, so a script that dumps raw hrefs returns `[BLOCKED]` and costs a round trip.
 `read_board.js` already extracts the parts it needs into JSON fields; follow that pattern if you extend it.
@@ -163,6 +179,7 @@ doesn't need the club's contact details pulled into a transcript.
 ## Files
 
 - `scripts/read_board.js` — parse the signup board into JSON and tag clickable elements
+- `scripts/summarize_board.js` — one-screen view of the board; use this to verify a write
 - `scripts/click_mark.js` — click a tagged element (substitute `__MARK__`)
 - `references/operations.md` — step-by-step algorithm for each operation, including the unmapped ones
 - `references/site-map.md` — page map, attendance codes, URL contracts, provenance

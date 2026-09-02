@@ -102,7 +102,11 @@ Plain GET on an icon link:
 - `n` — slot index within the role (`0` for single-slot roles; Evaluator's 2nd slot was `n=2`)
 - `att` — `1` in person / `6` online. Claiming a role also declares how you attend.
 
-Two icons per open slot: `icon_yesP_up.png` (in person) and `icon_yesV_up.png` (online).
+Up to two icons per open slot: `icon_yesP_up.png` (in person) and `icon_yesV_up.png` (online).
+
+**The online pair is conditional.** A club that doesn't meet online renders only the in-person icon, and its
+attendance row offers three radios (`P`, `N`, `?`) rather than four — code `6` simply isn't offered.
+Observed on meeting 700002 (2026-08-27). Read the controls that exist; don't assume the full set.
 
 **Releasing a role — contract not yet captured. TODO.**
 
@@ -126,6 +130,25 @@ Verified parse (2026-08-17):
     Grammarian          ▸ (none)                        ▸ 2 links
     Timer               ▸ (none)                        ▸ 2 links
     Quizmaster          ▸ (none)                        ▸ (missed by parser — see gotchas)
+
+## Empty board
+
+When the club has nothing scheduled, `/signup.php` returns a page with **no board table at all**, showing:
+
+    There is no data to report in this category for your club
+
+This is a distinct shape from a board with zero meeting columns, and it is not an error — it means the VP
+Education hasn't scheduled anything. Observed 2026-09-01, when the club had nothing on the books for
+September or October despite neighbouring clubs having their dates loaded.
+
+Detect it by that marker string rather than by the absence of the table, so a genuine parse failure stays
+distinguishable from an empty calendar.
+
+## Attendance / role precedence
+
+Claiming a role carries an `att` value and so declares how you attend. Observed 2026-08-27: claiming a role
+when attendance is **already set** does not overwrite it. The coupling fills a blank; it does not clobber a
+deliberate choice.
 
 ## Gotchas
 
@@ -174,7 +197,7 @@ for someone's contact details; a roster question doesn't need the club's persona
 
 - [ ] Whether declining notifies the VPE, and whether it releases roles the member holds
 
-- [ ] Releasing / un-claiming a role
+- [ ] Releasing / un-claiming a role (read `myControls` from an occupied cell — no click needed)
 - [ ] What a successful write returns (redirect? flash message?) — needed for verification after a write
 - [ ] Behaviour when >1 future meeting exists (multi-column layout, `available[1]`, `available[2]`…)
 - [ ] "When am I speaking" beyond the signup horizon — likely `memberchart.php?chart=…` (Roles by Member)
