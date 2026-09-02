@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  askl:
+    name: askl (spec + cross-runtime lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Deterministic compliance against the agentskills.io / agent-plugins.org specs
+      # plus Claude Code and Codex enforcement. Strict: silent degradation (e.g. a
+      # SKILL.md over Codex's 8000-byte activation cap) fails the job. Pedantic-tier
+      # exceptions live in askl.config.json.
+      - uses: korya/askl@v0
+        with:
+          dialect: spec,claude,codex
+          strict: "true"
+          pedantic: "true"
