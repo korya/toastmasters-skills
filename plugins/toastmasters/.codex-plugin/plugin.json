@@ -23,6 +23,17 @@
     "longDescription": "Ask in plain language whether you are signed up for the next meeting, say whether you are coming, and take a role like Timer or Toastmaster — without hunting through the easy-Speak signup grid.\n\nYou stay in control. It opens easy-Speak in a browser, you sign in yourself, and it always says exactly what it is about to change and waits for your yes. Afterwards it re-reads the page and reports what actually happened, rather than assuming it worked.\n\nWorks with clubs on easy-speak.org, toastmasterclub.org and tmclub.eu.",
     "developerName": "korya",
     "category": "Productivity",
-    "defaultPrompt": "Am I signed up for my next Toastmasters meeting?"
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/korya/toastmasters-skills",
+    "defaultPrompt": [
+      "Am I signed up for my next Toastmasters meeting?",
+      "Mark me as coming to Monday's meeting.",
+      "Which roles are still open at the next meeting?",
+      "Sign me up as Timer for the next meeting.",
+      "When am I speaking next?"
+    ]
   }
 }
