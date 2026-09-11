@@ -41,7 +41,7 @@ Placeholder values, shown so the field names below have something concrete to po
 |---|---|---|
 | Logged-in home | `/portal.php` | `page` |
 | **Sign Up for Meetings** | `/signup.php` | — |
-| Meeting agenda | `/view_meeting.php` | `t` = meetingId |
+| Meeting agenda **+ whole-club attendance** | `/view_meeting.php` | `t` = meetingId |
 | Mobile agenda | `/viewagenda_mobile.php` | `c`, `show` |
 | Meeting list (past+next) | `/meeting_list.php` | month range filter |
 | Calendar | `/mycalendar.php` | `jump` |
@@ -81,15 +81,30 @@ is submitted.
     /tm_decline.php?action=confirmattendance&u=<userId>&t=<meetingId>&z=2&mode=popup
 
 Window is 400x300. Contents: one optional `textarea` named `comment[<memberMeetingId>]`, plus confirm and
-cancel submits, POSTing back to the same page. A blank reason is accepted.
+cancel submits (`input[name=confirm]` / `input[name=cancel]`), POSTing back to the same page. A blank reason
+is accepted.
 
-`memberMeetingId` is a **third id type**, distinct from `t` (meeting) and `r` (role slot). Read it from the
-popup; don't try to derive it.
+**The window is unreachable from browser automation.** It opens outside the agent's tab group, so it appears
+in no tab listing and no tool can drive it — regardless of whether the click was synthetic or a real
+coordinate click, both of which reach the handler and open it. Intercept `window.open` to capture the URL and
+load the form in an iframe instead. `scripts/decline.js` implements this; see operations C4.
 
-Confirmed working 2026-08-21: `none` -> `notAttending`, blank reason, verified on a fresh board load.
+`memberMeetingId` is a **third id type**, distinct from `t` (meeting) and `r` (role slot). It is the first
+argument of the `N` radio's `onclick`:
+
+    attendMeeting(memberMeetingId, meetingId, statusCode)
+
+so `onclick.match(/\d+/g)` yields it without opening anything. (Return only those numbers — the extension
+blocks tool output containing the raw attribute text.)
+
+Confirmed working 2026-08-21 (`none` -> `notAttending`, blank reason) and 2026-09-11 (with a reason), both
+verified on a fresh board load.
+
+**Declining withdraws role sign-up for that meeting** (2026-09-11): every `action=volunteer` link vanished
+from that member's column afterwards.
 
 Two behaviours remain unobserved: whether it notifies the VP Education, and whether it releases roles the
-member holds at that meeting (the member who exercised it held none).
+member already holds at that meeting (both members who have exercised it held none).
 
 ### Claim a role
 
@@ -120,6 +135,15 @@ Observed on meeting 700002 (2026-08-27). Read the controls that exist; don't ass
 - `Confirm Attendance` row → 4 radios named `available[<colIndex>]`, values 1/6/2/5; `checked` reveals current state
   (none checked ⇒ member has not responded yet)
 - Role rows → occupant names per slot; open slots carry `action=volunteer` links
+
+**Multi-slot roles number their occupants; single-slot roles do not.** Speaker and Evaluator cells read
+`1 Alice Example 2 Bob Example`; Toastmaster, Grammarian, Timer and Quizmaster render a bare name. Parse both
+shapes, and keep the bare-name fallback from firing on `1 2`, which is two *empty* slots.
+
+It answers those questions **for the logged-in member only**. The whole club's attendance is on
+`/view_meeting.php`, in the table containing `Total Attendance` — locate it by that marker text, never by
+index. Rows are name + `Attending` / `Not Attending` / `Unknown`, except the logged-in member's own row,
+which renders the live `P`/`O`/`N`/`?` radios in place of a status word.
 
 Verified parse (2026-08-17):
 

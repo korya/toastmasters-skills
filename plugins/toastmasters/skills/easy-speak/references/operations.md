@@ -139,7 +139,29 @@ Navigate to `/view_meeting.php?t=<meetingId>`, or click the meeting date in the 
 agenda with timings, themes and every assignment — more detail than the signup board, and the right source when
 the user asks "what's happening at the meeting" rather than "what's open".
 
-### B6. My participation history — `partial`
+### B6. Who else is attending a meeting — `verified`
+
+The signup board only ever shows **your own** attendance. The whole club's answer lives on the meeting page.
+
+1. Navigate to `/view_meeting.php?t=<meetingId>`.
+2. Find the table containing the text `Total Attendance` — it carries a headline count (`Total Attendance :
+   4 + 0 Online`, then `Member (4 /23)`) and a per-member list.
+3. Read the member rows: each is a name plus one of `Attending`, `Not Attending`, or `Unknown`.
+
+**Find that table by its marker text, never by index.** The page has 70-odd tables and the attendance block
+sat at index 24 on one club's page; that number is an accident of this club's layout and will not hold.
+
+**Your own row renders differently.** Where other members show a status word, the logged-in member's row
+shows the live `P`/`O`/`N`/`?` radios instead — the same control set as the signup board, writing to the
+same place. Read which radio is `checked` rather than looking for a status label you will not find.
+
+`Unknown` here is the board's `none`: never responded. It is not `undecided`, which is a deliberate `?`.
+Most of a club will usually sit at `Unknown`, so lead with the count that is actually committed.
+
+Observed 2026-09-11: 4 of 23 members attending, the rest `Unknown`, with the logged-in member's own decline
+showing as a selected `N` radio rather than as "Not Attending".
+
+### B7. My participation history — `partial`
 
 `My Participation → View my Speech Progress` (`/profile_cc.php`) for the speech/pathways track.
 `Club Charts → Role History` / `Participation Chart` for role counts. Layouts not yet captured.
@@ -172,34 +194,52 @@ tells the VPE you saw the request.
 
 ### C4. Decline attendance — `verified` (for a member holding no roles)
 
-**This path is not symmetric with the others.** Clicking `N` does not submit the attendance form at all. It
-opens a 400×300 popup window (`/tm_decline.php`) and leaves the board untouched until that popup is
-submitted.
+**Never click the `N` control bare. Always go through `scripts/decline.js`.**
 
-The popup is a single optional reason `textarea` named `comment[<memberMeetingId>]` — note that is a
-*member-meeting* id, a third id type distinct from the meetingId and the role slot id — plus confirm and
-cancel submit buttons. It POSTs back to itself.
+`N` is not symmetric with `P`/`O`/`?`. Those submit the attendance form in place. `N` calls
+`attendMeeting(...)`, which fires `window.open` on `/tm_decline.php` and leaves the board untouched until
+that popup is submitted.
 
-1. Read the board and resolve the target meeting to its column.
-2. Click the **`N`** control for that column.
-3. A popup window opens. Switch to it.
-4. Optionally fill the reason. **A blank reason submits cleanly** — the field is not required. Only fill it
-   if the user gave you a reason to pass on; don't invent one on their behalf.
-5. **Click the popup's own confirm button.** The popup closes itself when its button is used. Submitting the
-   form out-of-band works too, but leaves an orphaned 400×300 window sitting on the user's screen that they
-   have to close by hand — and a stray window whose OK button would re-submit is a trap worth not setting.
-6. Return to the board and reload it.
-7. **Verify:** status for that meeting reads `notAttending`.
+**The popup opens in a window no browser-automation tool can reach.** It lands outside the agent's tab
+group, so it does not appear in any tab listing and cannot be read, filled or clicked. This has nothing to
+do with how the click was delivered: a synthetic `dispatchEvent` and a genuine coordinate click both reach
+the handler and both open the window. It is not blocked, not slow, not still loading. It is unreachable, and
+waiting or re-clicking will not change that.
 
-Observed end-to-end on 2026-08-21: status went `none` → `notAttending` with a blank reason, confirmed on a
-fresh page load rather than inferred from the response.
+That matters because the failure mode is misleading. An agent that clicks `N`, looks for the popup and finds
+nothing concludes the click failed, clicks again, and now two stray decline forms sit on the user's screen —
+each with a live OK button that will re-submit whenever the user gets around to closing them.
+
+So intercept `window.open`, keep the URL, and load the same form in an iframe on the board page where it can
+be driven normally. Same URL, same form, same confirm button, same POST — and no window to strand.
+
+The form is a single optional reason `textarea` named `comment[<memberMeetingId>]`. That is a
+*member-meeting* id, a third id type distinct from the meetingId and the role slot id; it is also readable
+from the `N` radio's own `onclick`, which takes `(memberMeetingId, meetingId, statusCode)`, so you can learn
+it without opening anything.
+
+1. Read the board with `MARKS = true` scoped to the target meeting; take `controls.<meetingId>.notAttending`.
+2. Run `scripts/decline.js` with that mark and a JSON-encoded reason (`""` for none).
+3. **A blank reason submits cleanly** — the field is not required. Only pass a reason the user actually gave
+   you; don't invent one on a member's behalf.
+4. Navigate to `/signup.php` and re-read.
+5. **Verify:** status for that meeting reads `notAttending`.
+
+Observed end-to-end on 2026-08-21 with a blank reason, and again on 2026-09-11 with a reason, both confirmed
+on a fresh page load rather than inferred from the response.
+
+**Declining withdraws you from role sign-up for that meeting** (observed 2026-09-11). Before the decline the
+member had volunteer icons on every open slot in that column; afterwards the column offered none. This is
+sensible — a member who isn't coming shouldn't be claiming Timer — but it is a side effect worth saying out
+loud, because it means declining and then changing your mind is not a free round trip.
 
 **Still unknown, so don't assume either way:**
 
 - Whether declining notifies the VP Education.
-- **Whether declining releases roles the member already holds at that meeting.** The one member who has
-  exercised this held no roles that night, so the interesting path is untested. If a user with a role asks
-  to decline, say this is unverified and check the board afterwards to see whether their role survived.
+- **Whether declining releases roles the member already holds at that meeting.** Both members who have
+  exercised this held no roles that night, so the interesting path is still untested. Given that declining
+  withdraws sign-up *rights*, releasing a held role is plausible — but plausible is not observed. If a user
+  with a role asks to decline, say so and check the board afterwards to see whether their role survived.
 
 ### C5. Set attendance across the next N meetings — `partial`
 
@@ -264,7 +304,7 @@ Contract not captured.
 |---|---|
 | **MVP** | A1, A2, B1, B2, B3, B4, C1, C2, C3, C4, D1 |
 | **Next** | C5 (bulk), D2 (release) |
-| **Later** | A3, B5, B6, D3 |
+| **Later** | A3, B5, B6, B7, D3 |
 
 ## Cross-cutting rules for the skill
 

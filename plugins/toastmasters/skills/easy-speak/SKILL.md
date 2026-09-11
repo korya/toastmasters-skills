@@ -19,11 +19,13 @@ attendance" and discovering at the click that you can't is the failure worth des
 | What you have | How to work |
 |---|---|
 | A JavaScript tool in the page (Claude Code + Chrome extension, or a browser MCP server) | **Scripted path** — the rest of this file. Reads the board in one call, clicks by tag. Fast and safe. |
-| Only screenshots and clicks (ChatGPT's cloud browser) | **Visual path** — follow `references/visual-operation.md`. The bundled scripts will not run there. |
+| Only screenshots and clicks (ChatGPT's cloud browser) | **Visual path** — follow `references/visual-operation.md`. The bundled scripts will not run there, and declining cannot be completed at all. |
 | No browser at all | Say so plainly, and offer to talk the member through the steps themselves. |
 
 Both paths perform the same operations from `references/operations.md`; they differ only in how they read
-the page and how they click.
+the page and how they click — with one exception. **Declining needs the JavaScript tool.** It opens a popup
+window that no browser-automation tool can reach, and the only way through is to intercept it in the page.
+On the visual path, hand that one operation to the member.
 
 ## The one idea that makes this simple
 
@@ -44,32 +46,39 @@ the site.
    (everywhere else). Same software, three installs. Ask once if unsaid, then remember it.
 2. Open `https://<host>/signup.php` and **wait ~5s** — Cloudflare shows a `Just a moment...` page first, and
    a read taken too early returns the challenge, not the site.
-3. Confirm you're logged in (`session.loggedIn` below).
+3. Confirm you're logged in — the board read returns your name in `user`, or `error: not logged in`.
 4. If not, **hand the tab over and ask them to log in** — the form is in `portal.php`'s left sidebar. Never
    type the password. It's theirs, and no automation win is worth holding someone's credentials.
 
-Sessions expire between conversations — check `session.loggedIn` every time (`references/gotchas.md` explains the failure mode).
+Sessions expire between conversations — check for that `user` field every time (`references/gotchas.md` explains the failure mode).
 
 ## Reading the board
 
 Run `scripts/read_board.js` in the page (via the browser JavaScript tool) and parse the JSON it returns:
 
 ```
-{ "session":    {"loggedIn": true, "fullName": "...", "username": "..."},
-  "dateRange":  "No more dates available",
-  "meetings":   [{"col": 0, "label": "24 Aug 26", "meetingId": "700001"}],
-  "attendance": [{"meetingId": "700001", "status": "none", "controls": {"inPerson": "es-0", ...}}],
-  "roles":      [{"role": "Evaluator", "meetingId": "700001",
-                  "occupants": [{"slot": "1", "name": "Carol Example"}],
-                  "openSlots": [{"mark": "es-4", "slot": "2", "mode": "inPerson", "title": "..."}],
-                  "mine": false}] }
+{ "user":      "Dmitri Kochelorov",
+  "dateRange": "14 Sep 26 - 05 Oct 26",
+  "meetings":  [{"id": "700001", "label": "24 Aug 26", "me": "none"}],
+  "myRoles":   [{"role": "Timer", "id": "700001"}],
+  "controls":  {"700001": {"inPerson": "es-0", "notAttending": "es-2"}},
+  "roles":     [{"role": "Evaluator", "id": "700001", "taken": "1 Carol Example",
+                 "open": [{"slot": "2", "mode": "inPerson", "mark": "es-4"}]}] }
 ```
 
 Use the script rather than reading the page by eye — `references/gotchas.md` says why.
 
-`status` is one of `inPerson`, `online`, `notAttending`, `undecided`, or `none`.
+`me` is one of `inPerson`, `online`, `notAttending`, `undecided`, or `none`.
+
+**Ask for only what you need.** Tool output is cut off at about 950 characters, so the script takes two
+placeholders: `ONLY` (which meetings get role detail — `null` for none, a meeting id, or a list) and `MARKS`
+(`false` to read, `true` when you're about to click). Over budget it returns a short error naming what to
+narrow rather than a truncated board, because a truncated board looks like a smaller club rather than a
+broken read. The default `ONLY = null, MARKS = false` answers most questions and always fits; scope to one
+meeting id with `MARKS = true` before a write.
 
 To **verify** a write, run `scripts/summarize_board.js` instead — same facts, one screen, cheap to re-run.
+It prints every meeting's attendance and then as many full role blocks as fit, naming any it left out.
 
 ## Changing things
 
@@ -90,15 +99,16 @@ your first write of a session.** The click-by-click algorithm for each operation
 | | Operation | Notes |
 |---|---|---|
 | **Read** | List upcoming meetings | `meetings[]` from the board |
-| | Check my attendance | `attendance[]` — mind `none` vs `undecided` |
-| | Which roles are open / who's assigned | `roles[]` |
-| | When am I next speaking | `roles[]` where `role` is Speaker and `mine` is true |
+| | Check my attendance | `meetings[].me` — mind `none` vs `undecided` |
+| | Which roles are open / who's assigned | `roles[]` — needs `ONLY` set to that meeting |
+| | When am I next speaking | `myRoles[]` where `role` is Speaker; returned for every meeting |
 | | Full agenda for a meeting | `/view_meeting.php?t=<meetingId>` |
+| | **Who else is attending** | Same page — the `Total Attendance` table; the board shows only *your* status |
 | | Club roster / officers | `/memberlist.php` — see site-map |
 | | Meetings further out | `/mycalendar.php?jump=<months ahead>` |
 | **Write** | Confirm attendance (in person / online / undecided) | Click the matching `controls` mark |
-| | Decline attendance | Click `N`, then confirm in the popup that opens; reason is optional |
-| | Claim a role | Click an `openSlots` mark; also sets your attendance |
+| | Decline attendance | **Run `scripts/decline.js`** — never click `N` bare; it opens a window nothing can reach |
+| | Claim a role | Click an `open` mark; also sets your attendance |
 | | Release a role | **Unmapped** — hand to the user |
 | | Request a speech slot | **Unmapped** — hand to the user |
 
@@ -124,6 +134,7 @@ asked, and ask one plain question at a time.
 - `scripts/read_board.js` — parse the signup board into JSON and tag clickable elements
 - `scripts/summarize_board.js` — one-screen view of the board; use this to verify a write
 - `scripts/click_mark.js` — click a tagged element (substitute `__MARK__`)
+- `scripts/decline.js` — decline one meeting end to end, without opening an unreachable window
 - `references/visual-operation.md` — how to work with screenshots and clicks only, when the scripts can't run
 - `references/operations.md` — step-by-step algorithm for each operation, including the unmapped ones
 - `references/gotchas.md` — write mechanics and the traps; read before the first write
