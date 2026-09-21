@@ -12,9 +12,8 @@ application with no API, so this skill works by driving the real web UI in Chrom
 
 ## First, work out which hands you have
 
-easy-Speak has no API and sits behind Cloudflare, so the only way to do anything is to drive the page. What
-you can do depends on how you reach it — check before promising anything. Announcing "I'll confirm your
-attendance" and discovering at the click that you can't is the failure worth designing out.
+The only way to do anything is to drive the page, and what you can do depends on how you reach it. Check
+before promising anything — "I'll confirm your attendance" followed by "I can't click" is the failure to avoid.
 
 | What you have | How to work |
 |---|---|
@@ -22,10 +21,9 @@ attendance" and discovering at the click that you can't is the failure worth des
 | Only screenshots and clicks (ChatGPT's cloud browser) | **Visual path** — follow `references/visual-operation.md`. The bundled scripts will not run there, and declining cannot be completed at all. |
 | No browser at all | Say so plainly, and offer to talk the member through the steps themselves. |
 
-Both paths perform the same operations from `references/operations.md`; they differ only in how they read
-the page and how they click — with one exception. **Declining needs the JavaScript tool.** It opens a popup
-window that no browser-automation tool can reach, and the only way through is to intercept it in the page.
-On the visual path, hand that one operation to the member.
+Both paths perform the same operations from `references/operations.md`, with one exception: **declining
+needs the JavaScript tool**, because its popup window is unreachable any other way. On the visual path, hand
+that one operation to the member.
 
 ## The one idea that makes this simple
 
@@ -36,9 +34,8 @@ table — **role rows × upcoming-meeting columns** — and it simultaneously an
 - Which roles are still open?
 - Who is speaking, and am I one of them?
 
-...and it is also where you change all of those. Start there for nearly every request, and only go
-elsewhere for detail (full agenda, roster, months further out). `references/site-map.md` covers the rest of
-the site.
+...and it is also where you change all of those. Start there, and only go elsewhere for detail (full
+agenda, roster, months further out) — `references/site-map.md` covers the rest of the site.
 
 ## Getting a session
 
@@ -48,7 +45,7 @@ the site.
    a read taken too early returns the challenge, not the site.
 3. Confirm you're logged in — the board read returns your name in `user`, or `error: not logged in`.
 4. If not, **hand the tab over and ask them to log in** — the form is in `portal.php`'s left sidebar. Never
-   type the password. It's theirs, and no automation win is worth holding someone's credentials.
+   type the password; it's theirs.
 
 Sessions expire between conversations — check for that `user` field every time (`references/gotchas.md` explains the failure mode).
 
@@ -71,28 +68,23 @@ Use the script rather than reading the page by eye — `references/gotchas.md` s
 `me` is one of `inPerson`, `online`, `notAttending`, `undecided`, or `none`.
 
 **Ask for only what you need.** Tool output is cut off at about 950 characters, so the script takes two
-placeholders: `ONLY` (which meetings get role detail — `null` for none, a meeting id, or a list) and `MARKS`
-(`false` to read, `true` when you're about to click). Over budget it returns a short error naming what to
-narrow rather than a truncated board, because a truncated board looks like a smaller club rather than a
-broken read. The default `ONLY = null, MARKS = false` answers most questions and always fits; scope to one
-meeting id with `MARKS = true` before a write.
+placeholders: `ONLY` (which meetings get role detail — `null`, a meeting id, or a list) and `MARKS` (`true`
+only when you're about to click). Over budget it returns a short error naming what to narrow, never a
+truncated board. The default `ONLY = null, MARKS = false` always fits; scope to one meeting id with
+`MARKS = true` before a write. The script's header has the detail.
 
 To **verify** a write, run `scripts/summarize_board.js` instead — same facts, one screen, cheap to re-run.
-It prints every meeting's attendance and then as many full role blocks as fit, naming any it left out.
 
 ## Changing things
 
 The rhythm for every write is **read → confirm → click → re-read → report what you actually saw.**
 
-**Confirm with the user first**, naming the meeting date and the exact value. This isn't ceremony: clicking a
-role icon is a side-effecting GET that commits the instant it's clicked, with no "are you sure" dialog, and
-the change is immediately visible to the whole club — including the VP Education planning the agenda around
-it. Undoing means finding a release control this skill hasn't mapped yet.
+**Confirm with the user first**, naming the meeting date and the exact value. This isn't ceremony: a click
+commits instantly, with no "are you sure" dialog, and the whole club sees it — including the VP Education
+planning the agenda around it. Undoing means a release control this skill hasn't mapped yet.
 
-Full write mechanics — click-by-mark, re-reading after the reload, readyState polling — and
-the traps that bite hand-rolled approaches live in `references/gotchas.md`. **Read it before
-your first write of a session.** The click-by-click algorithm for each operation is in
-`references/operations.md`.
+Write mechanics and the traps live in `references/gotchas.md` — **read it before your first write of a
+session.** The click-by-click algorithm for each operation is in `references/operations.md`.
 
 ## Operations
 
@@ -112,8 +104,8 @@ your first write of a session.** The click-by-click algorithm for each operation
 | | Release a role | **Unmapped** — hand to the user |
 | | Request a speech slot | **Unmapped** — hand to the user |
 
-Two operations are unmapped and declining-while-holding-a-role is unverified — the specifics
-are in `references/gotchas.md`; hand those to the user rather than guessing.
+Hand the unmapped operations to the user rather than guessing; declining *while holding a role* is
+unverified too (`references/gotchas.md`).
 
 ## Reporting back
 
@@ -122,20 +114,18 @@ Lead with the answer, then the supporting detail. A table of meetings/roles read
 Report what you observed. If the user asked about three meetings and one exists, the first line says so.
 If a write didn't visibly take effect, say that instead of assuming success.
 
-When reading the roster, take names and club roles and leave the phone and email columns alone — a headcount
-doesn't need the club's contact details pulled into a transcript.
+From the roster take names and club roles; leave the phone and email columns alone.
 
-**Match the member's vocabulary, not the site's.** These are club members, not engineers. "You're down as
-coming on Monday the 24th" lands; `status: inPerson` does not. Keep ids, selectors and JSON out of it unless
-asked, and ask one plain question at a time.
+**Match the member's vocabulary, not the site's.** "You're down as coming on Monday the 24th" lands;
+`status: inPerson` does not. Keep ids, selectors and JSON out of it unless asked.
 
 ## Files
 
 - `scripts/read_board.js` — parse the signup board into JSON and tag clickable elements
-- `scripts/summarize_board.js` — one-screen view of the board; use this to verify a write
+- `scripts/summarize_board.js` — one-screen view of the board; verifies a write
 - `scripts/click_mark.js` — click a tagged element (substitute `__MARK__`)
-- `scripts/decline.js` — decline one meeting end to end, without opening an unreachable window
-- `references/visual-operation.md` — how to work with screenshots and clicks only, when the scripts can't run
-- `references/operations.md` — step-by-step algorithm for each operation, including the unmapped ones
-- `references/gotchas.md` — write mechanics and the traps; read before the first write
-- `references/site-map.md` — page map, attendance codes, URL contracts, provenance
+- `scripts/decline.js` — decline one meeting end to end
+- `references/visual-operation.md` — working with screenshots and clicks only
+- `references/operations.md` — step-by-step algorithm for each operation
+- `references/gotchas.md` — write mechanics and the traps
+- `references/site-map.md` — page map, attendance codes, URL contracts
