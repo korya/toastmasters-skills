@@ -99,6 +99,12 @@ exactly one did. Do not treat a short list as an error, and say plainly how many
 For meetings beyond the signup horizon (including past ones), use `/meeting_list.php`, which lists every meeting
 with its date and id and offers a month-range filter.
 
+**Today's meeting is usually not on the board.** A meeting leaves `/signup.php` when its agenda closes to
+member changes, which happens on the day itself — observed gone by early afternoon for a noon meeting, and
+possibly earlier. So on a meeting day the board's first column is *next* week, and "the next meeting" read off
+the board silently skips the one the member is most likely asking about. When the question could mean today,
+check: follow the sidebar's **Last Meeting** link (B6) and compare its date with today's.
+
 ### B2. Read my attendance status — `verified`
 
 1. Navigate to `/signup.php`.
@@ -143,10 +149,40 @@ the user asks "what's happening at the meeting" rather than "what's open".
 
 The signup board only ever shows **your own** attendance. The whole club's answer lives on the meeting page.
 
-1. Navigate to `/view_meeting.php?t=<meetingId>`.
-2. Find the table containing the text `Total Attendance` — it carries a headline count (`Total Attendance :
-   4 + 0 Online`, then `Member (4 /23)`) and a per-member list.
-3. Read the member rows: each is a name plus one of `Attending`, `Not Attending`, or `Unknown`.
+1. Navigate to `/view_meeting.php?t=<meetingId>`. For the most recent closed meeting — today's, once its
+   agenda has closed — click **Last Meeting** in the sidebar's *Meetings* group instead; no id needed.
+2. Run `scripts/read_meeting.js` with `WHAT = "attendance"`. It returns the headline count, the names grouped
+   by status, a count of the non-responders, and the ids of the neighbouring meetings. `WHAT = "roles"` reads
+   the same page's role assignments, which is the only source once the meeting has left the board.
+
+By hand (the visual path): find the table containing the text `Total Attendance` — it carries a headline count
+(`Total Attendance : 4 + 0 Online`, then `Member (4 /23)`) and a per-member list of name plus status word.
+
+**The page has two phases, and they do not share a vocabulary.**
+
+| | Upcoming | Past (agenda closed) |
+|---|---|---|
+| Section heading | `Confirm Attendance` | `Actual Attendance` |
+| Status words | `Attending`, `NOT Attending`, `Unknown`, presumably `Attending Online` | `Attended`, `Attended Online`, `Unknown` |
+| Who is listed | every member | only those who came, plus the logged-in member |
+| Roles heading | `Sign Up for Roles` | `Actual Meeting Roles` |
+
+`Attending Online` is inferred from the past-phase wording and has not been seen; report whatever word the
+page uses. On a past meeting absentees are not rows at all — they are the difference between the list and the
+membership count in `Member (8 + 3 Online /23)`.
+
+**Attendance on a past meeting keeps moving for hours.** It is entered by hand after the meeting. Observed
+2026-09-21: at ~13:00 the noon meeting read `8 + 1 Online`, with two role-holders missing from the list; by
+mid-afternoon it read `8 + 3 Online` and both had appeared as `Attended Online`. A role-holder absent from a
+same-day list is more likely not-yet-recorded than a no-show — say so rather than flagging a discrepancy.
+
+**Walk with Previous / Next, never by arithmetic on ids.** Every meeting page links its neighbours, and
+`read_meeting.js` returns them as `prev` / `next`. Ids are allocated across all clubs on the install, so
+consecutive weeks are often but not reliably consecutive numbers: 646589 → 646591 straddled a skipped week.
+
+**Leave the online-meeting credentials alone.** A closed agenda prints the video-call link, meeting id and
+passcode in plain text. They are the club's keys — never copy them into a reply or tool output. The script
+does not read them; a full page-text read does, so prefer the script.
 
 **Find that table by its marker text, never by index.** The page has 70-odd tables and the attendance block
 sat at index 24 on one club's page; that number is an accident of this club's layout and will not hold.
@@ -159,7 +195,8 @@ same place. Read which radio is `checked` rather than looking for a status label
 Most of a club will usually sit at `Unknown`, so lead with the count that is actually committed.
 
 Observed 2026-09-11: 4 of 23 members attending, the rest `Unknown`, with the logged-in member's own decline
-showing as a selected `N` radio rather than as "Not Attending".
+showing as a selected `N` radio rather than as "Not Attending". On a past meeting the radios are gone and the
+logged-in member's row shows a status word like everyone else's.
 
 ### B7. My participation history — `partial`
 

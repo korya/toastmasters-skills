@@ -42,6 +42,7 @@ Placeholder values, shown so the field names below have something concrete to po
 | Logged-in home | `/portal.php` | `page` |
 | **Sign Up for Meetings** | `/signup.php` | — |
 | Meeting agenda **+ whole-club attendance** | `/view_meeting.php` | `t` = meetingId |
+| Most recent closed meeting (sidebar **Last Meeting**) | `/view_meeting.php` | `c` = clubId, `show=last` — no `t`; the page's `viewagenda.php` link carries the id |
 | Mobile agenda | `/viewagenda_mobile.php` | `c`, `show` |
 | Meeting list (past+next) | `/meeting_list.php` | month range filter |
 | Calendar | `/mycalendar.php` | `jump` |
@@ -142,8 +143,14 @@ shapes, and keep the bare-name fallback from firing on `1 2`, which is two *empt
 
 It answers those questions **for the logged-in member only**. The whole club's attendance is on
 `/view_meeting.php`, in the table containing `Total Attendance` — locate it by that marker text, never by
-index. Rows are name + `Attending` / `Not Attending` / `Unknown`, except the logged-in member's own row,
-which renders the live `P`/`O`/`N`/`?` radios in place of a status word.
+index. Rows are name + `Attending` / `NOT Attending` / `Unknown`, except the logged-in member's own row,
+which renders the live `P`/`O`/`N`/`?` radios in place of a status word. Once the agenda closes the block is
+retitled `Actual Attendance`, the words become `Attended` / `Attended Online`, and only those who came are
+listed. Members sit in `div#status_div_`; guests and visitors in `div#status_div_<group name>`.
+`scripts/read_meeting.js` parses both phases — operations B6 has the detail.
+
+A meeting drops off `/signup.php` when its agenda closes, on the day of the meeting. From then on this page
+is the only place its roles and attendance can be read.
 
 Verified parse (2026-08-17):
 

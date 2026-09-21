@@ -115,7 +115,7 @@ plugins/toastmasters/
 ├── .codex-plugin/plugin.json        Codex manifest
 └── skills/easy-speak/
     ├── SKILL.md                     Agent Skills compliant
-    ├── scripts/                     read_board, summarize_board, click_mark
+    ├── scripts/                     read_board, summarize_board, click_mark, decline, read_meeting
     └── references/                  UI algorithms, site map
 ```
 

@@ -7,8 +7,8 @@ description: Manage Toastmasters club participation on easy-Speak (easy-speak.or
 
 # easy-Speak
 
-easy-Speak is the meeting-management system many Toastmasters clubs run on. It is a phpBB-era PHP
-application with no API, so this skill works by driving the real web UI in Chrome.
+easy-Speak is the meeting-management system many Toastmasters clubs run on: a phpBB-era PHP app with no
+API, behind Cloudflare, so this skill drives the real web UI in a browser.
 
 ## First, work out which hands you have
 
@@ -47,11 +47,11 @@ agenda, roster, months further out) — `references/site-map.md` covers the rest
 4. If not, **hand the tab over and ask them to log in** — the form is in `portal.php`'s left sidebar. Never
    type the password; it's theirs.
 
-Sessions expire between conversations — check for that `user` field every time (`references/gotchas.md` explains the failure mode).
+Sessions expire between conversations — check for `user` every time (`references/gotchas.md` says why).
 
 ## Reading the board
 
-Run `scripts/read_board.js` in the page (via the browser JavaScript tool) and parse the JSON it returns:
+Run `scripts/read_board.js` in the page — never read the grid by eye — and parse the JSON it returns:
 
 ```
 { "user":      "Dmitri Kochelorov",
@@ -62,8 +62,6 @@ Run `scripts/read_board.js` in the page (via the browser JavaScript tool) and pa
   "roles":     [{"role": "Evaluator", "id": "700001", "taken": "1 Carol Example",
                  "open": [{"slot": "2", "mode": "inPerson", "mark": "es-4"}]}] }
 ```
-
-Use the script rather than reading the page by eye — `references/gotchas.md` says why.
 
 `me` is one of `inPerson`, `online`, `notAttending`, `undecided`, or `none`.
 
@@ -95,7 +93,8 @@ session.** The click-by-click algorithm for each operation is in `references/ope
 | | Which roles are open / who's assigned | `roles[]` — needs `ONLY` set to that meeting |
 | | When am I next speaking | `myRoles[]` where `role` is Speaker; returned for every meeting |
 | | Full agenda for a meeting | `/view_meeting.php?t=<meetingId>` |
-| | **Who else is attending** | Same page — the `Total Attendance` table; the board shows only *your* status |
+| | **Who is / was attending** | Same page, `scripts/read_meeting.js`; the board shows only *you* |
+| | Today's or a past meeting | **Not on the board** — sidebar *Last Meeting*, then `read_meeting.js` |
 | | Club roster / officers | `/memberlist.php` — see site-map |
 | | Meetings further out | `/mycalendar.php?jump=<months ahead>` |
 | **Write** | Confirm attendance (in person / online / undecided) | Click the matching `controls` mark |
@@ -125,6 +124,7 @@ From the roster take names and club roles; leave the phone and email columns alo
 - `scripts/summarize_board.js` — one-screen view of the board; verifies a write
 - `scripts/click_mark.js` — click a tagged element (substitute `__MARK__`)
 - `scripts/decline.js` — decline one meeting end to end
+- `scripts/read_meeting.js` — one meeting's club-wide attendance or roles
 - `references/visual-operation.md` — working with screenshots and clicks only
 - `references/operations.md` — step-by-step algorithm for each operation
 - `references/gotchas.md` — write mechanics and the traps
