@@ -70,17 +70,30 @@ label is the same class of error as misclicking one.
 Remember that claiming a role also sets how they attend, so this may change their attendance line too. Say
 that out loud beforehand — members don't expect the two to be linked.
 
-## V4. Decline a meeting
+## V4. Decline a meeting — **hand this one to the member**
 
-Clicking `N` does not submit the form. It opens a small popup window (about 400x300).
+This is the operation the screenshot-and-click path cannot finish. Say so early rather than starting it.
 
-1. Click `N` in the attendance row.
-2. Switch to the popup. It holds one optional reason box and confirm/cancel buttons.
-3. Leave the reason blank unless the member gave you one. Don't invent a reason on their behalf.
-4. **Click the popup's own confirm button** — that closes it properly. Submitting around it leaves a stray
-   window on their screen whose OK button would file the decline a second time.
-5. Return to the board, reload, screenshot.
-6. **Verify:** `N` is now selected.
+Clicking `N` does not submit the form. It opens a small popup window (about 400x300) on `/tm_decline.php`,
+and that window opens **outside the tab you are driving** — you cannot screenshot it, read it or click it.
+Whether you click `N` by tooltip or by coordinate makes no difference; both open it and neither can reach it.
+The board stays unchanged until that popup is confirmed, so a decline you start this way is a decline that
+never happens, plus a stray window on the member's screen whose OK button will file it later.
+
+With the JavaScript tool available, `scripts/decline.js` solves this by intercepting the popup and loading
+the form in an iframe. Without it, there is nothing to intercept with.
+
+So:
+
+1. Tell the member you can't complete a decline from here, and why, in one sentence.
+2. Walk them through it: open the signup board, click `N` for that meeting, a small window appears, type a
+   reason if they want one, click OK.
+3. Ask them to come back when the window has closed.
+4. Reload the board and screenshot.
+5. **Verify:** `N` is now selected. Report what you see, not what they told you they clicked.
+
+Setting `P`, `O` or `?` (V2) works fine by eye — those submit the board's own form. It is only `N` that
+needs the member's own hands.
 
 ## Talking to the member
 

@@ -5,10 +5,17 @@ mechanics come first, then the traps that bite hand-rolled approaches.
 
 ## Write mechanics
 
-**Click by mark, not by coordinates.** `read_board.js` tags every actionable element with `data-es-mark`;
-`scripts/click_mark.js` clicks one by that tag, dispatching a real click so the page's own handlers run
-exactly as they would for a human. Coordinate clicks on a table of identical icons are how you sign someone
-up as Grammarian when they asked for Timer.
+**Click by mark, not by coordinates.** Read the board with `MARKS = true` to tag every actionable element
+with `data-es-mark`, then `scripts/click_mark.js` clicks one by that tag, dispatching a real click so the
+page's own handlers run exactly as they would for a human. Coordinate clicks on a table of identical icons
+are how you sign someone up as Grammarian when they asked for Timer.
+
+A coordinate click buys you nothing here, so reaching for one is always a mistake. It is not "more real"
+than a dispatched click — both reach the page's handlers identically, including handlers that call
+`window.open`. If a click appears to do nothing, the cause is something else; look before you escalate.
+
+**Decline is the one control with its own script.** `scripts/decline.js` handles `N` end to end because the
+window it opens cannot be reached any other way. See the popup entry below.
 
 **Re-read the board afterwards.** The page reloads on every write, which destroys the marks and can reorder
 columns. Re-running is both how you re-tag and how you verify. Report the state you observed, not the state
@@ -25,7 +32,8 @@ Two operations are still unmapped, because verifying them required writing to a 
 comes up, say so and drive the user through the UI rather than guessing at a control you've never seen.
 
 Declining is now mapped, with one caveat: nobody has yet declined *while holding a role*, so whether that
-releases the role is unknown. If that's the situation, say so and check the board afterwards.
+releases the role is unknown. It is more likely than it was — declining does withdraw sign-up rights for
+that meeting — but likely is not observed. If that's the situation, say so and check the board afterwards.
 
 ## Things that will bite you
 
@@ -62,15 +70,40 @@ aren't — mention this when a user claims a role after saying they might not ma
 **Role slot ids are per-meeting.** `roleItemId` identifies an agenda line, not a role type — "Toastmaster"
 has a different id at every meeting. Never carry one across meetings; always re-read the board.
 
-**Declining is not symmetric with accepting.** `P`/`O`/`?` submit the form; `N` opens a popup and leaves the
-board untouched until that popup is confirmed. Use the popup's own button rather than submitting around it,
-or you strand a window on the user's screen whose OK button would re-submit.
+**Popup windows are unreachable, and clicking one open strands it.** `N` calls `window.open`, and the window
+lands outside the agent's tab group: no tab listing shows it, no tool can drive it. This is independent of
+how the click was delivered — synthetic and coordinate clicks both open it. Nothing is blocked or pending,
+so waiting and re-clicking only multiplies the problem, and each stray window is a live form whose OK button
+re-submits whenever the user finally closes it. Intercept `window.open`, keep the URL, and load the form in
+an iframe you can drive. `scripts/decline.js` does this; never click `N` bare.
+
+**Declining is not symmetric with accepting.** `P`/`O`/`?` submit the form in place; `N` opens the popup
+above and leaves the board untouched until that form is confirmed. Declining also withdraws you from role
+sign-up for that meeting — the volunteer icons disappear from that whole column — so it is not a free round
+trip if the user might change their mind.
+
+**Tool output is truncated at about 950 characters.** Measured 2026-09-11. This is small enough that a naive
+full-board dump overflows on a four-meeting club, and a truncated board is worse than a failed read: it
+looks like a club with fewer meetings or fewer filled roles than it has, and reports built on it are
+confidently wrong. `read_board.js` and `summarize_board.js` both scope their output and refuse to return
+something oversized. If you extend them, keep the budget check; if you write an ad-hoc query, keep it small
+and never assume a long result arrived whole.
+
+**Single-slot roles have no slot number.** Multi-slot cells read `1 Alice Example 2 Bob Example`, but
+Toastmaster, Grammarian, Timer and Quizmaster render the occupant's bare name. A parser that only matches
+numbered occupants reports all four as unfilled while members hold them — the worst direction to be wrong
+in, since it invites signing someone up for a taken role. Fall back to the raw cell text, but guard that
+fallback against the `1 2` two-empty-slots case or you invent a member named "1 2".
 
 **An empty board is not an error.** When the club has nothing scheduled, `/signup.php` renders "There is no
 data to report in this category for your club" with no table at all. The scripts return `empty: true` for
 this. It means the VP Education hasn't scheduled, not that anything is broken — say so plainly rather than
 reporting a parse failure.
 
-**Keep query strings out of tool output.** The Chrome extension blocks tool results that look like
-cookie or query-string data, so a script that dumps raw hrefs returns `[BLOCKED]` and costs a round trip.
-`read_board.js` already extracts the parts it needs into JSON fields; follow that pattern if you extend it.
+**Keep query strings — and all page JavaScript — out of tool output.** The Chrome extension blocks tool
+results that look like cookie or query-string data, so a script that dumps raw hrefs returns `[BLOCKED]` and
+costs a round trip. The guard is broader than "don't print URLs": on 2026-09-11 it also rejected an element's
+`onclick` attribute and a function's `toString()`, *including* after the query strings had been stripped by
+regex. Treat it as a rule about the whole class — never return page source, attribute text or handler bodies.
+Pull out the fields you need instead. Numeric ids pass fine, which is enough to learn a handler's arguments:
+matching `/\d+/g` against the `N` radio's `onclick` yields `attendMeeting`'s three ids without tripping it.
