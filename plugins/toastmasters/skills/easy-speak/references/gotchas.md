@@ -59,6 +59,13 @@ when the board is exhausted. To distinguish "not scheduled yet" from "hidden beh
 `/mycalendar.php?jump=1`; if neighbouring clubs have meetings that month and this club doesn't, nobody has
 scheduled them.
 
+**On a meeting day, the board's "next meeting" is next week's.** A meeting leaves `/signup.php` when its
+agenda closes, on the day itself. Nothing marks the gap — the first column simply becomes the following
+meeting, and an answer built on it is about the wrong date. If today could be a meeting day, open the
+sidebar's **Last Meeting** link and check its date before answering "the next meeting" or "today's meeting".
+Reach past meetings that way, or by the Previous / Next links on a meeting page — never by subtracting one
+from a meeting id.
+
 **`none` and `undecided` are different states.** `none` means the member never responded at all;
 `undecided` means they deliberately chose `?`. Only the first is worth nudging about. The UI shows both as
 "no commitment", so it's easy to collapse them and lose the distinction the user cares about.
